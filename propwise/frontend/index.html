@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>PropWise - AI House Price Prediction</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f2f8;
+  --surface:#ffffff;
+  --primary:#1a1a2e;
+  --accent:#4f46e5;
+  --accent2:#7c3aed;
+  --gold:#f59e0b;
+  --green:#10b981;
+  --red:#ef4444;
+  --muted:#6b7280;
+  --border:#e5e7eb;
+  --radius:14px;
+  --shadow:0 4px 24px rgba(0,0,0,0.08);
+}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--primary);min-height:100vh;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+
+/* TOAST */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--primary);color:#fff;
+  padding:14px 22px;border-radius:12px;font-size:.9rem;font-weight:600;
+  display:flex;align-items:center;gap:10px;z-index:9999;
+  opacity:0;transform:translateY(16px);transition:.3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{border-left:4px solid var(--green);}
+.toast.error{border-left:4px solid var(--red);}
+.toast.info{border-left:4px solid var(--accent);}
+.toast .t-icon{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:.72rem;font-weight:800;flex-shrink:0;}
+.toast.success .t-icon{background:var(--green);}
+.toast.error   .t-icon{background:var(--red);}
+.toast.info    .t-icon{background:var(--accent);}
+
+/* NAVBAR */
+.navbar{background:var(--primary);padding:0 32px;height:60px;display:flex;
+  align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.navbar-brand{font-size:1.3rem;font-weight:800;color:#fff;letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;}
+.brand-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;}
+.navbar-right{display:flex;align-items:center;gap:10px;}
+.nav-username{background:rgba(255,255,255,.12);color:#fff;padding:6px 16px;
+  border-radius:20px;font-size:.85rem;font-weight:600;}
+.nav-btn{background:transparent;border:1.5px solid rgba(255,255,255,.3);color:#fff;
+  padding:6px 16px;border-radius:20px;font-size:.85rem;cursor:pointer;transition:.2s;}
+.nav-btn:hover{background:rgba(255,255,255,.1);}
+
+/* LANDING */
+#pg-landing{background:var(--primary);min-height:100vh;}
+.landing-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;text-align:center;padding:40px 20px;
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);}
+.hero-badge{background:rgba(79,70,229,.2);border:1px solid rgba(79,70,229,.4);
+  color:#a5b4fc;padding:8px 20px;border-radius:30px;font-size:.82rem;
+  font-weight:600;margin-bottom:28px;letter-spacing:.5px;}
+.hero-title{font-size:3.8rem;font-weight:900;color:#fff;line-height:1.1;margin-bottom:16px;}
+.hero-title span{background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:1.15rem;color:#9ca3af;max-width:540px;line-height:1.7;margin-bottom:40px;}
+.hero-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;}
+.btn-primary{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;
+  border:none;padding:14px 32px;border-radius:12px;font-size:1rem;
+  font-weight:700;cursor:pointer;transition:.2s;}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(79,70,229,.4);}
+.btn-outline{background:transparent;border:2px solid rgba(255,255,255,.3);color:#fff;
+  padding:14px 32px;border-radius:12px;font-size:1rem;font-weight:700;
+  cursor:pointer;transition:.2s;}
+.btn-outline:hover{background:rgba(255,255,255,.08);}
+.hero-features{display:flex;gap:32px;margin-top:56px;flex-wrap:wrap;justify-content:center;}
+.hf{display:flex;flex-direction:column;align-items:center;gap:8px;color:#9ca3af;font-size:.85rem;}
+.hf-icon{font-size:1.8rem;}
+
+/* AUTH PAGES */
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#1a1a2e,#0f3460);padding:20px;}
+.auth-card{background:#fff;border-radius:20px;padding:44px;width:100%;max-width:440px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo-text{font-size:1.6rem;font-weight:900;color:var(--primary);}
+.auth-logo-sub{color:var(--muted);font-size:.88rem;margin-top:4px;}
+.auth-title{font-size:1.4rem;font-weight:800;margin-bottom:6px;}
+.auth-sub{color:var(--muted);font-size:.88rem;margin-bottom:28px;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:.82rem;font-weight:700;color:var(--primary);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;}
+.form-input{width:100%;padding:12px 14px;border:1.5px solid var(--border);
+  border-radius:10px;font-size:.95rem;outline:none;transition:.2s;background:#fafafa;}
+.form-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,.1);}
+.btn-full{width:100%;padding:13px;background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;
+  cursor:pointer;margin-top:8px;transition:.2s;}
+.btn-full:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(79,70,229,.35);}
+.btn-full:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.auth-switch{text-align:center;margin-top:20px;color:var(--muted);font-size:.88rem;}
+.auth-switch a{color:var(--accent);font-weight:700;cursor:pointer;text-decoration:none;}
+.err-msg{color:var(--red);font-size:.82rem;margin-top:8px;display:none;
+  background:#fef2f2;padding:8px 12px;border-radius:8px;border-left:3px solid var(--red);}
+
+/* DASHBOARD LAYOUT */
+.dash-layout{display:flex;min-height:100vh;}
+.sidebar{width:250px;background:var(--primary);padding:20px 0;flex-shrink:0;
+  position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-avatar{display:flex;flex-direction:column;align-items:center;padding:20px;
+  border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:8px;}
+.av-circle{width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;font-weight:800;color:#fff;margin-bottom:10px;}
+.av-name{color:#fff;font-weight:700;font-size:.9rem;}
+.av-email{color:#9ca3af;font-size:.75rem;text-align:center;margin-top:2px;}
+.sidebar-section{color:#6b7280;font-size:.7rem;font-weight:700;letter-spacing:1px;
+  text-transform:uppercase;padding:14px 20px 6px;}
+.slink{display:flex;align-items:center;gap:10px;padding:10px 20px;color:#d1d5db;
+  font-size:.88rem;font-weight:500;cursor:pointer;transition:.2s;border-radius:0;}
+.slink:hover{background:rgba(255,255,255,.07);color:#fff;}
+.slink.active{background:rgba(79,70,229,.3);color:#fff;font-weight:700;
+  border-left:3px solid #4f46e5;}
+.slink-icon{font-size:1rem;width:20px;text-align:center;}
+.dash-main{flex:1;overflow-y:auto;background:var(--bg);}
+
+/* PAGE HEADER */
+.pg-header{padding:28px 32px 0;}
+.pg-title{font-size:1.6rem;font-weight:800;color:var(--primary);}
+.pg-sub{color:var(--muted);font-size:.88rem;margin-top:4px;}
+
+/* CARDS */
+.card{background:var(--surface);border-radius:var(--radius);box-shadow:var(--shadow);}
+.content-pad{padding:28px 32px;}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
+  padding:24px 32px 0;}
+.stat-card{background:var(--surface);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow);border-top:4px solid transparent;}
+.stat-card.c1{border-color:#4f46e5;}
+.stat-card.c2{border-color:#10b981;}
+.stat-card.c3{border-color:#f59e0b;}
+.stat-card.c4{border-color:#ef4444;}
+.stat-num{font-size:2rem;font-weight:900;color:var(--primary);}
+.stat-lbl{font-size:.78rem;color:var(--muted);font-weight:600;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+.stat-icon{font-size:1.6rem;float:right;opacity:.4;}
+
+/* PREDICT FORM */
+.predict-wrap{padding:24px 32px;}
+.form-card{background:var(--surface);border-radius:var(--radius);
+  padding:28px;box-shadow:var(--shadow);}
+.form-section-title{font-size:.72rem;font-weight:800;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--accent);margin-bottom:20px;
+  padding-bottom:10px;border-bottom:2px solid var(--border);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.form-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:20px;}
+.tog-group{display:flex;gap:8px;margin-top:6px;}
+.tog-btn{flex:1;padding:10px;border-radius:8px;border:2px solid var(--border);
+  background:#fafafa;cursor:pointer;font-size:.88rem;font-weight:700;
+  transition:.2s;color:var(--muted);}
+.tog-btn.on.yes{background:#d1fae5;border-color:var(--green);color:#065f46;}
+.tog-btn.on.no{background:#fee2e2;border-color:var(--red);color:#991b1b;}
+.predict-btn{width:100%;padding:16px;margin-top:24px;
+  background:linear-gradient(135deg,#4f46e5,#7c3aed);
+  color:#fff;border:none;border-radius:12px;font-size:1.05rem;
+  font-weight:800;cursor:pointer;transition:.2s;letter-spacing:.3px;}
+.predict-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(79,70,229,.4);}
+.predict-btn:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+
+/* RESULT */
+.result-wrap{margin-top:24px;background:linear-gradient(135deg,#1a1a2e,#0f3460);
+  border-radius:var(--radius);padding:28px;display:none;}
+.result-wrap.show{display:block;}
+.result-label{color:#9ca3af;font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.result-price{font-size:2.6rem;font-weight:900;color:#fff;margin:8px 0;}
+.result-conf{display:flex;align-items:center;gap:10px;margin-top:4px;}
+.conf-bar-bg{flex:1;height:6px;background:rgba(255,255,255,.15);border-radius:3px;}
+.conf-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,#4f46e5,#10b981);width:0;transition:width 1s ease;}
+.conf-text{color:#9ca3af;font-size:.82rem;font-weight:600;}
+.result-meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;}
+.rm-item{background:rgba(255,255,255,.06);border-radius:10px;padding:12px;text-align:center;}
+.rm-val{color:#fff;font-weight:700;font-size:.95rem;}
+.rm-key{color:#9ca3af;font-size:.72rem;margin-top:2px;}
+.dl-btn{display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;margin-top:20px;padding:12px;
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;transition:.2s;}
+.dl-btn:hover{background:rgba(255,255,255,.18);}
+
+/* HISTORY TABLE */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--primary);}
+th{padding:12px 16px;text-align:left;color:#fff;font-size:.78rem;
+  font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:.87rem;}
+tr:hover td{background:#f9fafb;}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;
+  font-size:.72rem;font-weight:700;letter-spacing:.3px;}
+.badge-success{background:#d1fae5;color:#065f46;}
+.badge-failed{background:#fee2e2;color:#991b1b;}
+.badge-admin{background:#ede9fe;color:#5b21b6;}
+.badge-user{background:#e0f2fe;color:#0369a1;}
+.tbl-footer{padding:14px 20px;color:var(--muted);font-size:.82rem;
+  border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.btn-dl{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;
+  padding:6px 14px;border-radius:8px;font-size:.78rem;font-weight:700;cursor:pointer;transition:.2s;}
+.btn-dl:hover{opacity:.85;}
+
+/* FILTER BAR */
+.filter-bar{padding:16px 32px;}
+.filter-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
+.filter-group{display:flex;flex-direction:column;gap:4px;min-width:160px;}
+.filter-group.fg-grow{flex:1;}
+.filter-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.filter-input,.filter-select{padding:8px 12px;border:1.5px solid var(--border);
+  border-radius:8px;font-size:.85rem;background:#fff;outline:none;transition:.2s;}
+.filter-input:focus,.filter-select:focus{border-color:var(--accent);}
+.btn-fc{padding:8px 16px;background:var(--border);border:none;border-radius:8px;
+  font-size:.82rem;font-weight:700;cursor:pointer;color:var(--muted);transition:.2s;}
+.btn-fc:hover{background:#d1d5db;}
+
+/* CHART */
+.chart-card{margin:0 32px;background:var(--surface);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:24px;}
+.chart-title{font-size:.88rem;font-weight:700;color:var(--primary);margin-bottom:16px;}
+.bar-chart{display:flex;align-items:flex-end;gap:8px;height:120px;}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;height:100%;}
+.bar-val{font-size:.68rem;font-weight:700;color:var(--muted);}
+.bar{width:100%;background:linear-gradient(180deg,#4f46e5,#7c3aed);border-radius:4px 4px 0 0;min-height:4px;transition:.5s;}
+.bar-date{font-size:.65rem;color:var(--muted);white-space:nowrap;}
+
+/* LOADING / EMPTY */
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:40px;color:var(--muted);font-size:.9rem;}
+.spinner{width:20px;height:20px;border:3px solid var(--border);
+  border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.empty-state{text-align:center;padding:48px;color:var(--muted);}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;}
+.empty-text{font-size:.9rem;}
+
+/* LOCATION custom */
+.loc-custom-input{display:none;margin-top:8px;}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .form-row,.form-row3{grid-template-columns:1fr;}
+  .result-meta{grid-template-columns:1fr 1fr;}
+  .sidebar{display:none;}
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">
+  <div class="t-icon" id="t-icon">OK</div>
+  <span id="t-msg"></span>
+</div>
+
+<!-- ═══ LANDING ══════════════════════════════════════════════════════════════ -->
+<div class="page active" id="pg-landing">
+  <div class="landing-hero">
+    <div class="hero-badge">AI-Powered Property Valuation</div>
+    <div class="hero-title">PropWise<br><span>Smart. Accurate. Fast.</span></div>
+    <div class="hero-sub">Get instant AI-based house price predictions. Enter property details and receive a market estimate within seconds.</div>
+    <div class="hero-btns">
+      <button class="btn-primary" onclick="show('pg-login')">Sign In</button>
+      <button class="btn-outline" onclick="show('pg-register')">Get Started Free</button>
+    </div>
+    <div class="hero-features">
+      <div class="hf"><div class="hf-icon">🤖</div>AI Powered</div>
+      <div class="hf"><div class="hf-icon">📄</div>PDF Reports</div>
+      <div class="hf"><div class="hf-icon">🔒</div>Secure</div>
+      <div class="hf"><div class="hf-icon">⚡</div>Instant</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOGIN ════════════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-login">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-text">PropWise</div>
+        <div class="auth-logo-sub">AI House Price Prediction</div>
+      </div>
+      <div class="auth-title">Welcome back</div>
+      <div class="auth-sub">Sign in to your account</div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="li-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="li-pass" placeholder="Your password"/>
+      </div>
+      <div class="err-msg" id="li-err"></div>
+      <button class="btn-full" id="li-btn" onclick="doLogin()">Sign In to Dashboard</button>
+      <div class="auth-switch">Don't have an account? <a onclick="show('pg-register')">Register here</a></div>
+      <div class="auth-switch" style="margin-top:8px"><a onclick="show('pg-landing')">Back to Home</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REGISTER ══════════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-register">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-text">PropWise</div>
+        <div class="auth-logo-sub">Create your account</div>
+      </div>
+      <div class="auth-title">Get started</div>
+      <div class="auth-sub">Free account — no credit card needed</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input class="form-input" type="text" id="rg-name" placeholder="Your full name"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" id="rg-email" placeholder="you@example.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="rg-pass" placeholder="Min 6 characters"/>
+      </div>
+      <div class="err-msg" id="rg-err"></div>
+      <button class="btn-full" id="rg-btn" onclick="doRegister()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="show('pg-login')">Sign in</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ USER DASHBOARD ════════════════════════════════════════════════════════ -->
+<div class="page" id="pg-dash">
+  <div class="dash-layout">
+    <div class="sidebar">
+      <div class="sidebar-avatar">
+        <div class="av-circle" id="d-avatar">U</div>
+        <div class="av-name" id="d-name">User</div>
+        <div class="av-email" id="d-email"></div>
+      </div>
+      <div class="sidebar-section">Main</div>
+      <div class="slink active" id="sl-predict" onclick="switchTab('predict')">
+        <span class="slink-icon">🏠</span> Predict Price
+      </div>
+      <div class="slink" id="sl-history" onclick="switchTab('history')">
+        <span class="slink-icon">📋</span> My History
+      </div>
+      <div class="sidebar-section">Account</div>
+      <div class="slink" onclick="logout()">
+        <span class="slink-icon">🚪</span> Sign Out
+      </div>
+    </div>
+    <div class="dash-main">
+
+      <!-- PREDICT TAB -->
+      <div id="tab-predict">
+        <div class="pg-header">
+          <div class="pg-title">Property Valuation</div>
+          <div class="pg-sub">Enter details to get an AI-powered market price estimate</div>
+        </div>
+        <div class="predict-wrap">
+          <div class="form-card">
+            <div class="form-section-title">Location and Size</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <select class="form-input" id="p-loc" onchange="onLocChange()">
+                  <option value="">Select a location...</option>
+                </select>
+                <input class="form-input loc-custom-input" type="text" id="p-loc-custom"
+                  placeholder="Type your location e.g. Rohini, Noida..."/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Built-up Area (sq ft)</label>
+                <input class="form-input" type="number" id="p-area" placeholder="e.g. 1500" min="100"/>
+              </div>
+            </div>
+            <div class="form-section-title">Rooms and Floors</div>
+            <div class="form-row3">
+              <div class="form-group">
+                <label class="form-label">Bedrooms</label>
+                <input class="form-input" type="number" id="p-bed" value="3" min="1" max="10"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bathrooms</label>
+                <input class="form-input" type="number" id="p-bath" value="2" min="1" max="8"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Floors</label>
+                <input class="form-input" type="number" id="p-floor" value="1" min="1" max="10"/>
+              </div>
+            </div>
+            <div class="form-section-title">Property Info</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Age of Property (years)</label>
+                <input class="form-input" type="number" id="p-age" value="5" min="0" max="100"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Garage</label>
+                <div class="tog-group">
+                  <button class="tog-btn on yes" id="tg-gy" onclick="setTog('garage','yes')">Yes</button>
+                  <button class="tog-btn no"     id="tg-gn" onclick="setTog('garage','no')">No</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Garden / Lawn</label>
+                <div class="tog-group">
+                  <button class="tog-btn on yes" id="tg-dy" onclick="setTog('garden','yes')">Yes</button>
+                  <button class="tog-btn no"     id="tg-dn" onclick="setTog('garden','no')">No</button>
+                </div>
+              </div>
+            </div>
+            <button class="predict-btn" id="p-btn" onclick="doPred()">Get AI Price Prediction</button>
+
+            <!-- RESULT -->
+            <div class="result-wrap" id="result-wrap">
+              <div class="result-label">Estimated Market Value</div>
+              <div class="result-price" id="r-price">Rs. 0</div>
+              <div class="result-conf">
+                <div class="conf-bar-bg"><div class="conf-bar" id="r-bar"></div></div>
+                <div class="conf-text">Confidence: <span id="r-conf">0%</span></div>
+              </div>
+              <div class="result-meta" id="r-meta"></div>
+              <button class="dl-btn" onclick="dlReport()">Download PDF Report</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORY TAB -->
+      <div id="tab-history" style="display:none">
+        <div class="pg-header">
+          <div class="pg-title">My Prediction History</div>
+          <div class="pg-sub">All your past property valuations</div>
+        </div>
+        <div style="padding:24px 32px">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th>#</th><th>Location</th><th>Area</th>
+                  <th>Rooms</th><th>Predicted Price</th>
+                  <th>Confidence</th><th>Date</th><th>Report</th>
+                </tr></thead>
+                <tbody id="hist-body">
+                  <tr><td colspan="8"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ADMIN DASHBOARD ═══════════════════════════════════════════════════════ -->
+<div class="page" id="pg-admin">
+  <div class="navbar">
+    <div class="navbar-brand"><div class="brand-dot"></div>PropWise Admin</div>
+    <div class="navbar-right">
+      <div class="nav-username" id="a-uname">Admin</div>
+      <button class="nav-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="dash-layout">
+    <div class="sidebar" style="position:fixed;height:calc(100vh - 60px);top:60px">
+      <div class="sidebar-avatar">
+        <div class="av-circle" style="background:linear-gradient(135deg,#ef4444,#dc2626)">A</div>
+        <div class="av-name" id="a-sname">Admin</div>
+        <div class="av-email">Administrator</div>
+      </div>
+      <div class="sidebar-section">Dashboard</div>
+      <div class="slink active" id="al-overview"  onclick="switchAdmin('overview')">
+        <span class="slink-icon">📊</span> Overview
+      </div>
+      <div class="slink" id="al-users"     onclick="switchAdmin('users')">
+        <span class="slink-icon">👥</span> All Users
+      </div>
+      <div class="slink" id="al-loginlogs" onclick="switchAdmin('loginlogs')">
+        <span class="slink-icon">🔐</span> Login Logs
+      </div>
+      <div class="slink" id="al-allpreds"  onclick="switchAdmin('allpreds')">
+        <span class="slink-icon">🔮</span> All Predictions
+      </div>
+      <div class="sidebar-section">Account</div>
+      <div class="slink" onclick="logout()">
+        <span class="slink-icon">🚪</span> Sign Out
+      </div>
+    </div>
+
+    <div class="dash-main" style="margin-left:250px">
+
+      <!-- OVERVIEW TAB -->
+      <div id="atab-overview">
+        <div class="pg-header">
+          <div class="pg-title">Dashboard Overview</div>
+          <div class="pg-sub">Platform statistics at a glance</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card c1">
+            <div class="stat-icon">👥</div>
+            <div class="stat-num" id="s-users">0</div>
+            <div class="stat-lbl">Total Users</div>
+          </div>
+          <div class="stat-card c2">
+            <div class="stat-icon">✅</div>
+            <div class="stat-num" id="s-logins">0</div>
+            <div class="stat-lbl">Successful Logins</div>
+          </div>
+          <div class="stat-card c3">
+            <div class="stat-icon">🔮</div>
+            <div class="stat-num" id="s-preds">0</div>
+            <div class="stat-lbl">Total Predictions</div>
+          </div>
+          <div class="stat-card c4">
+            <div class="stat-icon">❌</div>
+            <div class="stat-num" id="s-failed">0</div>
+            <div class="stat-lbl">Failed Logins</div>
+          </div>
+        </div>
+        <div style="padding:24px 32px 0">
+          <div class="chart-card">
+            <div class="chart-title">Login Activity — Last 7 Days</div>
+            <div class="bar-chart" id="bar-chart">
+              <div class="loading"><div class="spinner"></div>Loading chart...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div id="atab-users" style="display:none">
+        <div class="pg-header">
+          <div class="pg-title">All Users</div>
+          <div class="pg-sub">Registered users and their activity</div>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-group fg-grow">
+              <label class="filter-label">Search</label>
+              <input class="filter-input" type="text" id="us-search" placeholder="Name or email..." oninput="renderUsers()"/>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Role</label>
+              <select class="filter-select" id="us-role" onchange="renderUsers()">
+                <option value="">All</option>
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="filter-group" style="justify-content:flex-end;padding-top:18px">
+              <button class="btn-fc" onclick="clearUsers()">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 32px 32px">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th>#</th><th>Name</th><th>Email</th><th>Role</th>
+                  <th>Logins</th><th>Predictions</th><th>Last Login</th><th>Joined</th>
+                </tr></thead>
+                <tbody id="us-tbody">
+                  <tr><td colspan="8"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="tbl-footer" id="us-footer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGIN LOGS TAB -->
+      <div id="atab-loginlogs" style="display:none">
+        <div class="pg-header">
+          <div class="pg-title">Login Logs</div>
+          <div class="pg-sub">All login attempts — success and failed</div>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-group fg-grow">
+              <label class="filter-label">Search</label>
+              <input class="filter-input" type="text" id="ll-search" placeholder="Name or email..." oninput="renderLL()"/>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">Status</label>
+              <select class="filter-select" id="ll-status" onchange="renderLL()">
+                <option value="">All</option>
+                <option value="success">Success</option>
+                <option value="failed">Failed</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">From Date</label>
+              <input class="filter-input" type="date" id="ll-from" onchange="renderLL()"/>
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">To Date</label>
+              <input class="filter-input" type="date" id="ll-to" onchange="renderLL()"/>
+            </div>
+            <div class="filter-group" style="justify-content:flex-end;padding-top:18px">
+              <button class="btn-fc" onclick="clearLL()">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 32px 32px">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th>#</th><th>Name</th><th>Email</th>
+                  <th>Date</th><th>Time</th><th>IP Address</th><th>Status</th>
+                </tr></thead>
+                <tbody id="ll-tbody">
+                  <tr><td colspan="7"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="tbl-footer" id="ll-footer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALL PREDICTIONS TAB -->
+      <div id="atab-allpreds" style="display:none">
+        <div class="pg-header">
+          <div class="pg-title">All Predictions</div>
+          <div class="pg-sub">Every prediction — download any user report</div>
+        </div>
+        <div class="filter-bar">
+          <div class="filter-row">
+            <div class="filter-group fg-grow">
+              <label class="filter-label">Search by Name / Email / Location</label>
+              <input class="filter-input" type="text" id="ap-search" placeholder="e.g. Rohini or user@email.com" oninput="renderAP()"/>
+            </div>
+            <div class="filter-group" style="justify-content:flex-end;padding-top:18px">
+              <button class="btn-fc" onclick="clearAP()">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div style="padding:0 32px 32px">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="tbl-wrap">
+              <table>
+                <thead><tr>
+                  <th>#</th><th>User</th><th>Email</th><th>Location</th>
+                  <th>Area</th><th>Rooms</th><th>Price</th>
+                  <th>Confidence</th><th>Date</th><th>Report</th>
+                </tr></thead>
+                <tbody id="ap-tbody">
+                  <tr><td colspan="10"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="tbl-footer" id="ap-footer"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+var API = 'http://' + window.location.host + '/api';
+var token = localStorage.getItem('pw_token');
+var currentUser = null;
+try { currentUser = JSON.parse(localStorage.getItem('pw_user') || 'null'); } catch(e){}
+var lastPredId = null;
+var togs = {garage: 'yes', garden: 'yes'};
+var rawUsers = [], rawLL = [], rawAP = [];
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+}
+var toastTimer;
+function toast(msg, type) {
+  type = type || 'success';
+  var icons = {success: 'OK', error: 'ERR', info: '...'};
+  document.getElementById('t-icon').textContent = icons[type] || 'OK';
+  document.getElementById('t-msg').textContent  = msg;
+  var el = document.getElementById('toast');
+  el.className = 'toast ' + type + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 3500);
+}
+function fmt(n) { return Number(n).toLocaleString('en-IN', {maximumFractionDigits:0}); }
+function fmtDT(s) {
+  if (!s) return {date: '--', time: '--'};
+  var d = new Date(s);
+  return {
+    date: d.toLocaleDateString('en-IN', {year:'numeric', month:'short', day:'numeric'}),
+    time: d.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'})
+  };
+}
+async function api(path, opts) {
+  opts = opts || {};
+  var h = {'Content-Type': 'application/json'};
+  if (token) h['Authorization'] = 'Bearer ' + token;
+  var r = await fetch(API + path, Object.assign({headers: h}, opts));
+  var text = await r.text();
+  var d;
+  try { d = JSON.parse(text); } catch(e) {
+    throw new Error('Server error ' + r.status + '. Make sure backend is running on port 8080.');
+  }
+  if (!r.ok) throw new Error(d.error || 'Request failed');
+  return d;
+}
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  if (token && currentUser) {
+    if (currentUser.role === 'admin') initAdmin(); else initDash();
+  }
+});
+
+// ── AUTH ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+  var email = document.getElementById('li-email').value.trim();
+  var pass  = document.getElementById('li-pass').value;
+  var err   = document.getElementById('li-err');
+  err.style.display = 'none';
+  if (!email || !pass) { err.textContent = 'Please fill all fields'; err.style.display = 'block'; return; }
+  var btn = document.getElementById('li-btn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    var d = await api('/auth/login', {method:'POST', body: JSON.stringify({email:email, password:pass})});
+    token = d.token; currentUser = d.user;
+    localStorage.setItem('pw_token', token);
+    localStorage.setItem('pw_user', JSON.stringify(currentUser));
+    toast('Welcome back, ' + currentUser.name.split(' ')[0] + '!');
+    if (currentUser.role === 'admin') initAdmin(); else initDash();
+  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Sign In to Dashboard'; }
+}
+async function doRegister() {
+  var name  = document.getElementById('rg-name').value.trim();
+  var email = document.getElementById('rg-email').value.trim();
+  var pass  = document.getElementById('rg-pass').value;
+  var err   = document.getElementById('rg-err');
+  err.style.display = 'none';
+  if (!name || !email || !pass) { err.textContent = 'All fields required'; err.style.display = 'block'; return; }
+  if (pass.length < 6) { err.textContent = 'Password min 6 characters'; err.style.display = 'block'; return; }
+  var btn = document.getElementById('rg-btn');
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    var d = await api('/auth/register', {method:'POST', body: JSON.stringify({full_name:name, email:email, password:pass})});
+    token = d.token; currentUser = d.user;
+    localStorage.setItem('pw_token', token);
+    localStorage.setItem('pw_user', JSON.stringify(currentUser));
+    toast('Account created! Welcome to PropWise!');
+    initDash();
+  } catch(e) { err.textContent = e.message; err.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Create Account'; }
+}
+function logout() {
+  localStorage.removeItem('pw_token');
+  localStorage.removeItem('pw_user');
+  token = null; currentUser = null;
+  show('pg-landing');
+  toast('Signed out successfully');
+}
+
+// ── USER DASHBOARD ─────────────────────────────────────────────────────────
+function initDash() {
+  show('pg-dash');
+  document.getElementById('d-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('d-name').textContent   = currentUser.name;
+  document.getElementById('d-email').textContent  = currentUser.email;
+  switchTab('predict');
+  loadLocations();
+}
+function switchTab(t) {
+  ['predict', 'history'].forEach(function(x){
+    document.getElementById('tab-' + x).style.display = x === t ? 'block' : 'none';
+    document.getElementById('sl-' + x).classList.toggle('active', x === t);
+  });
+  if (t === 'history') loadHistory();
+}
+async function loadLocations() {
+  try {
+    var d = await api('/locations');
+    var s = document.getElementById('p-loc');
+    s.innerHTML = '<option value="">Select a location...</option>';
+    d.locations.forEach(function(l) {
+      var o = document.createElement('option');
+      o.value = l; o.textContent = l; s.appendChild(o);
+    });
+    var co = document.createElement('option');
+    co.value = '__custom__'; co.textContent = '[+] Enter custom location...';
+    s.appendChild(co);
+  } catch(e) { console.error('Locations load failed:', e); }
+}
+function onLocChange() {
+  var v  = document.getElementById('p-loc').value;
+  var ci = document.getElementById('p-loc-custom');
+  ci.style.display = v === '__custom__' ? 'block' : 'none';
+  if (v !== '__custom__') ci.value = '';
+}
+function getLocation() {
+  var v = document.getElementById('p-loc').value;
+  if (v === '__custom__') return document.getElementById('p-loc-custom').value.trim();
+  return v;
+}
+function setTog(type, val) {
+  togs[type] = val;
+  if (type === 'garage') {
+    document.getElementById('tg-gy').className = 'tog-btn yes' + (val==='yes'?' on':'');
+    document.getElementById('tg-gn').className = 'tog-btn no'  + (val==='no' ?' on':'');
+  } else {
+    document.getElementById('tg-dy').className = 'tog-btn yes' + (val==='yes'?' on':'');
+    document.getElementById('tg-dn').className = 'tog-btn no'  + (val==='no' ?' on':'');
+  }
+}
+async function doPred() {
+  var loc  = getLocation();
+  var area = document.getElementById('p-area').value;
+  if (!loc)  { toast('Please select or enter a location', 'error'); return; }
+  if (!area) { toast('Please enter built-up area', 'error'); return; }
+  var btn = document.getElementById('p-btn');
+  btn.disabled = true; btn.textContent = 'Analysing...';
+  try {
+    var payload = {
+      location: loc, area_sqft: area,
+      bedrooms: document.getElementById('p-bed').value,
+      bathrooms: document.getElementById('p-bath').value,
+      floors: document.getElementById('p-floor').value,
+      age_of_property: document.getElementById('p-age').value,
+      garage: togs.garage === 'yes' ? 1 : 0,
+      garden: togs.garden === 'yes' ? 1 : 0
+    };
+    var d = await api('/predict', {method:'POST', body: JSON.stringify(payload)});
+    lastPredId = d.prediction_id;
+    document.getElementById('r-price').textContent = 'Rs. ' + fmt(d.predicted_price);
+    document.getElementById('r-conf').textContent  = d.confidence + '%';
+    document.getElementById('r-bar').style.width   = '0%';
+    setTimeout(function(){ document.getElementById('r-bar').style.width = d.confidence + '%'; }, 100);
+    document.getElementById('r-meta').innerHTML =
+      '<div class="rm-item"><div class="rm-val">' + loc + '</div><div class="rm-key">Location</div></div>' +
+      '<div class="rm-item"><div class="rm-val">' + fmt(area) + ' sqft</div><div class="rm-key">Area</div></div>' +
+      '<div class="rm-item"><div class="rm-val">' + document.getElementById('p-bed').value + 'B / ' + document.getElementById('p-bath').value + 'Ba</div><div class="rm-key">Rooms</div></div>' +
+      '<div class="rm-item"><div class="rm-val">' + document.getElementById('p-age').value + ' yrs</div><div class="rm-key">Age</div></div>';
+    document.getElementById('result-wrap').classList.add('show');
+    toast('Prediction complete! Confidence: ' + d.confidence + '%');
+  } catch(e) { toast(e.message, 'error'); }
+  finally { btn.disabled = false; btn.textContent = 'Get AI Price Prediction'; }
+}
+async function loadHistory() {
+  var tb = document.getElementById('hist-body');
+  tb.innerHTML = '<tr><td colspan="8"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>';
+  try {
+    var d = await api('/predictions/history');
+    if (!d.predictions.length) {
+      tb.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">🏠</div><div class="empty-text">No predictions yet. Try predicting a property!</div></div></td></tr>';
+      return;
+    }
+    tb.innerHTML = d.predictions.map(function(p, i) {
+      var dt = fmtDT(p.created_at);
+      return '<tr>' +
+        '<td style="color:var(--muted);font-size:.78rem">' + (i+1) + '</td>' +
+        '<td><strong>' + (p.location || '--') + '</strong></td>' +
+        '<td>' + fmt(p.area_sqft) + ' sqft</td>' +
+        '<td>' + p.bedrooms + ' Bed / ' + p.bathrooms + ' Bath</td>' +
+        '<td style="font-weight:800;color:var(--accent)">Rs. ' + fmt(p.predicted_price) + '</td>' +
+        '<td><span class="badge badge-success">' + Number(p.confidence_score).toFixed(1) + '%</span></td>' +
+        '<td><div style="font-size:.82rem;font-weight:600">' + dt.date + '</div>' +
+            '<div style="font-size:.74rem;color:var(--muted)">' + dt.time + '</div></td>' +
+        '<td><button class="btn-dl" onclick="dlById(' + p.id + ')">Download PDF</button></td>' +
+      '</tr>';
+    }).join('');
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:24px">' + e.message + '</td></tr>';
+  }
+}
+function dlReport() { if (lastPredId) dlById(lastPredId); }
+async function dlById(id) {
+  toast('Generating PDF...', 'info');
+  try {
+    var r = await fetch(API + '/predictions/download/' + id, {headers:{Authorization:'Bearer '+token}});
+    if (!r.ok) { toast('Download failed', 'error'); return; }
+    var b = await r.blob();
+    var u = URL.createObjectURL(b);
+    var a = document.createElement('a');
+    a.href = u; a.download = 'propwise_report_' + id + '.pdf'; a.click();
+    URL.revokeObjectURL(u);
+    toast('PDF downloaded!');
+  } catch(e) { toast('Download failed', 'error'); }
+}
+
+// ── ADMIN DASHBOARD ────────────────────────────────────────────────────────
+function initAdmin() {
+  show('pg-admin');
+  document.getElementById('a-uname').textContent = currentUser.name.split(' ')[0];
+  document.getElementById('a-sname').textContent = currentUser.name;
+  switchAdmin('overview');
+}
+function switchAdmin(t) {
+  ['overview','users','loginlogs','allpreds'].forEach(function(x){
+    document.getElementById('atab-' + x).style.display = x === t ? 'block' : 'none';
+    document.getElementById('al-' + x).classList.toggle('active', x === t);
+  });
+  if (t === 'overview')  loadOverview();
+  if (t === 'users')     loadUsers();
+  if (t === 'loginlogs') loadLoginLogs();
+  if (t === 'allpreds')  loadAllPreds();
+}
+async function loadOverview() {
+  try {
+    var d = await api('/admin/stats');
+    document.getElementById('s-users').textContent  = d.total_users;
+    document.getElementById('s-logins').textContent = d.total_logins;
+    document.getElementById('s-preds').textContent  = d.total_predictions;
+    document.getElementById('s-failed').textContent = d.failed_logins;
+    var chart = document.getElementById('bar-chart');
+    if (!d.daily_logins || !d.daily_logins.length) {
+      chart.innerHTML = '<div style="color:var(--muted);font-size:.88rem;padding:20px;text-align:center;width:100%">No login data yet</div>';
+      return;
+    }
+    var max = Math.max.apply(null, d.daily_logins.map(function(x){ return x.count; }).concat([1]));
+    chart.innerHTML = d.daily_logins.map(function(row) {
+      var pct   = Math.max((row.count / max) * 100, 5);
+      var label = new Date(row.date + 'T00:00:00').toLocaleDateString('en-IN', {month:'short', day:'numeric'});
+      return '<div class="bar-col">' +
+        '<div class="bar-val">' + row.count + '</div>' +
+        '<div class="bar" style="height:' + pct + '%"></div>' +
+        '<div class="bar-date">' + label + '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { toast(e.message, 'error'); }
+}
+async function loadUsers() {
+  var tb = document.getElementById('us-tbody');
+  tb.innerHTML = '<tr><td colspan="8"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>';
+  try {
+    var d = await api('/admin/users');
+    rawUsers = d.users; renderUsers();
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--red);padding:32px">' + e.message + '</td></tr>';
+  }
+}
+function renderUsers() {
+  var search = (document.getElementById('us-search') ? document.getElementById('us-search').value : '').toLowerCase();
+  var role   = document.getElementById('us-role')   ? document.getElementById('us-role').value   : '';
+  var users = rawUsers.filter(function(u){
+    if (search && !u.full_name.toLowerCase().includes(search) && !u.email.toLowerCase().includes(search)) return false;
+    if (role && u.role !== role) return false;
+    return true;
+  });
+  var tb = document.getElementById('us-tbody');
+  var ft = document.getElementById('us-footer');
+  if (!users.length) {
+    tb.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No users found</div></div></td></tr>';
+    ft.innerHTML = ''; return;
+  }
+  tb.innerHTML = users.map(function(u, i) {
+    var dt     = fmtDT(u.last_login);
+    var joined = new Date(u.created_at).toLocaleDateString('en-IN', {year:'numeric', month:'short', day:'numeric'});
+    return '<tr>' +
+      '<td style="color:var(--muted);font-size:.76rem">' + (i+1) + '</td>' +
+      '<td><strong>' + u.full_name + '</strong></td>' +
+      '<td style="color:var(--muted);font-size:.82rem">' + u.email + '</td>' +
+      '<td><span class="badge badge-' + u.role + '">' + (u.role === 'admin' ? 'Admin' : 'User') + '</span></td>' +
+      '<td><strong>' + u.total_logins + '</strong></td>' +
+      '<td>' + u.total_predictions + '</td>' +
+      '<td>' + (u.last_login ? '<div style="font-size:.82rem;font-weight:600">' + dt.date + '</div><div style="font-size:.74rem;color:var(--muted)">' + dt.time + '</div>' : '<span style="color:var(--muted)">Never</span>') + '</td>' +
+      '<td style="font-size:.8rem;color:var(--muted)">' + joined + '</td>' +
+    '</tr>';
+  }).join('');
+  ft.innerHTML = 'Showing ' + users.length + ' of ' + rawUsers.length + ' users';
+}
+function clearUsers() {
+  document.getElementById('us-search').value = '';
+  document.getElementById('us-role').value   = '';
+  renderUsers();
+}
+async function loadLoginLogs() {
+  var tb = document.getElementById('ll-tbody');
+  tb.innerHTML = '<tr><td colspan="7"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>';
+  try {
+    var d = await api('/admin/login-logs');
+    rawLL = d.logs; renderLL();
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--red);padding:32px">' + e.message + '</td></tr>';
+  }
+}
+function renderLL() {
+  var search = (document.getElementById('ll-search') ? document.getElementById('ll-search').value : '').toLowerCase();
+  var status = document.getElementById('ll-status') ? document.getElementById('ll-status').value : '';
+  var from   = document.getElementById('ll-from')   ? document.getElementById('ll-from').value   : '';
+  var to     = document.getElementById('ll-to')     ? document.getElementById('ll-to').value     : '';
+  var logs = rawLL.filter(function(l){
+    if (search && !l.full_name.toLowerCase().includes(search) && !l.email.toLowerCase().includes(search)) return false;
+    if (status && l.status !== status) return false;
+    if (from && new Date(l.login_time) < new Date(from)) return false;
+    if (to) { var t = new Date(to); t.setHours(23,59,59); if (new Date(l.login_time) > t) return false; }
+    return true;
+  });
+  var tb = document.getElementById('ll-tbody');
+  var ft = document.getElementById('ll-footer');
+  if (!logs.length) {
+    tb.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔐</div><div class="empty-text">No login records found</div></div></td></tr>';
+    ft.innerHTML = ''; return;
+  }
+  tb.innerHTML = logs.map(function(l, i) {
+    var dt = fmtDT(l.login_time);
+    return '<tr>' +
+      '<td style="color:var(--muted);font-size:.76rem">' + (i+1) + '</td>' +
+      '<td><strong>' + l.full_name + '</strong></td>' +
+      '<td style="color:var(--muted);font-size:.82rem">' + l.email + '</td>' +
+      '<td><div style="font-size:.82rem;font-weight:600">' + dt.date + '</div></td>' +
+      '<td><div style="font-size:.82rem;font-weight:600">' + dt.time + '</div></td>' +
+      '<td style="font-family:monospace;font-size:.78rem;color:var(--muted)">' + (l.ip_address || '--') + '</td>' +
+      '<td><span class="badge badge-' + l.status + '">' + (l.status === 'success' ? 'Success' : 'Failed') + '</span></td>' +
+    '</tr>';
+  }).join('');
+  ft.innerHTML = 'Showing ' + logs.length + ' of ' + rawLL.length + ' records';
+}
+function clearLL() {
+  ['ll-search','ll-from','ll-to'].forEach(function(id){ document.getElementById(id).value = ''; });
+  document.getElementById('ll-status').value = '';
+  renderLL();
+}
+async function loadAllPreds() {
+  var tb = document.getElementById('ap-tbody');
+  tb.innerHTML = '<tr><td colspan="10"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr>';
+  try {
+    var d = await api('/admin/predictions');
+    rawAP = d.predictions; renderAP();
+  } catch(e) {
+    tb.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--red);padding:32px">' + e.message + '</td></tr>';
+  }
+}
+function renderAP() {
+  var search = (document.getElementById('ap-search') ? document.getElementById('ap-search').value : '').toLowerCase();
+  var preds = rawAP.filter(function(p){
+    if (!search) return true;
+    return p.full_name.toLowerCase().includes(search) || p.email.toLowerCase().includes(search) || (p.location || '').toLowerCase().includes(search);
+  });
+  var tb = document.getElementById('ap-tbody');
+  var ft = document.getElementById('ap-footer');
+  if (!preds.length) {
+    tb.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔮</div><div class="empty-text">No predictions found</div></div></td></tr>';
+    ft.innerHTML = ''; return;
+  }
+  tb.innerHTML = preds.map(function(p, i) {
+    var dt = fmtDT(p.created_at);
+    return '<tr>' +
+      '<td style="color:var(--muted);font-size:.76rem">' + (i+1) + '</td>' +
+      '<td><strong>' + p.full_name + '</strong></td>' +
+      '<td style="color:var(--muted);font-size:.78rem">' + p.email + '</td>' +
+      '<td><strong>' + (p.location || '--') + '</strong></td>' +
+      '<td>' + fmt(p.area_sqft) + ' sqft</td>' +
+      '<td>' + p.bedrooms + ' Bed / ' + p.bathrooms + ' Bath</td>' +
+      '<td style="font-weight:800;color:var(--accent)">Rs. ' + fmt(p.predicted_price) + '</td>' +
+      '<td><span class="badge badge-success">' + Number(p.confidence_score).toFixed(1) + '%</span></td>' +
+      '<td><div style="font-size:.8rem;font-weight:600">' + dt.date + '</div>' +
+          '<div style="font-size:.74rem;color:var(--muted)">' + dt.time + '</div></td>' +
+      '<td><button class="btn-dl" onclick="adminDl(' + p.id + ')">Download PDF</button></td>' +
+    '</tr>';
+  }).join('');
+  ft.innerHTML = 'Showing ' + preds.length + ' of ' + rawAP.length + ' predictions';
+}
+function clearAP() { document.getElementById('ap-search').value = ''; renderAP(); }
+async function adminDl(id) {
+  toast('Generating PDF...', 'info');
+  try {
+    var r = await fetch(API + '/admin/predictions/download/' + id, {headers:{Authorization:'Bearer '+token}});
+    if (!r.ok) { toast('Download failed', 'error'); return; }
+    var b = await r.blob();
+    var u = URL.createObjectURL(b);
+    var a = document.createElement('a');
+    a.href = u; a.download = 'propwise_admin_report_' + id + '.pdf'; a.click();
+    URL.revokeObjectURL(u);
+    toast('PDF downloaded!');
+  } catch(e) { toast('Download failed', 'error'); }
+}
+
+// Enter key support
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter') return;
+  var active = document.querySelector('.page.active');
+  if (!active) return;
+  if (active.id === 'pg-login')    doLogin();
+  if (active.id === 'pg-register') doRegister();
+});
+</script>
+</body>
+</html>
