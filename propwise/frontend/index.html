@@ -674,7 +674,7 @@ tr:hover td{background:#f9fafb;}
 </div>
 
 <script>
-var API = 'http://' + window.location.host + '/api';
+var API = window.location.origin + '/api';
 var token = localStorage.getItem('pw_token');
 var currentUser = null;
 try { currentUser = JSON.parse(localStorage.getItem('pw_user') || 'null'); } catch(e){}
