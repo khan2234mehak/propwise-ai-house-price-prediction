@@ -5,6 +5,9 @@
 The application combines **Machine Learning, Flask REST APIs, SQLite, JWT authentication, and a responsive frontend** into a complete real-world web application.
 
 ---
+## 🚀 Live Demo
+
+👉 **[Try PropWise Live](https://propwise-ai-house-price-prediction.onrender.com)**
 
 ## 🚀 Features
 
